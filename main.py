@@ -12,7 +12,8 @@ def get_mvps():
     return player_data.loc[player_data["MVP"] == 1]
 
 def main():
-    print(get_player_data("Dennis Awtrey", 1979))
+    x = player_data[player_data.Player.notna()]
+    x.to_csv(r'data/new_data.csv')
 
 if __name__ == "__main__":
     main()
