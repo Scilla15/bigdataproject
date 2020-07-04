@@ -44,4 +44,5 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(add_help=True)
 	parser.add_argument('-d', '--dataPath', help='Path to cleaned player data', required=True)
 	args = parser.parse_args()
-	X, y = main(args)
+	scores = main(args)
+	print(scores)
