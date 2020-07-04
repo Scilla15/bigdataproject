@@ -47,16 +47,40 @@ def addLabelToStats(mvpDf, statsDf):
 		print('Found MVP, Player:', mvp.PLAYER, ', Year:', mvp.YEAR)
 	return statsDf
 
+def resolveNans(statsDf):
+	# For now, remove Games Started, 3 point Ar, and 3 point % features
+	statsDf = statsDf.drop(['GS', '3PAr', '3P%'], axis=1)
+	# Remove any features that are redundant info (like percentages)
+	statsDf = statsDf.drop(['FT%', 'eFG%', '2P%', 'FG%'], axis=1)
+	# Fill nans in 3P, 3PA, FTr, TS%, and TOV% as 0
+	statsDf['3P'] = statsDf['3P'].fillna(0)
+	statsDf['3PA'] = statsDf['3PA'].fillna(0)
+	statsDf['FTr'] = statsDf['FTr'].fillna(0)
+	statsDf['TS%'] = statsDf['TS%'].fillna(0)
+	statsDf['TOV%'] = statsDf['TOV%'].fillna(0)
+	# Remove Alex Scales, JamesOn Curry, and Damion James from data frame (PER = nan)
+	statsDf = statsDf[statsDf.PER.notna()]
+	return statsDf
+
+def mapPositions(statsDf):
+	statsDf.Pos = statsDf.Pos.str.split('-').str[0]
+	posMapping = {'C': 0, 'PF': 1, 'PG': 2, 'SF': 3, 'SG': 4}
+	statsDf = statsDf.replace({'Pos': posMapping})
+	return statsDf
 
 def main(args):
+	outputCsv = os.path.join(args.outputPath, 'player_data_cleaned.csv')
+	outputDf = os.path.join(args.outputPath, 'player_data_cleaned.pkl')
 	mvpDf = removeRowsWithoutPlayers(pd.read_csv(args.mvpDataPath))
 	statsDf = removeRowsWithoutPlayers(pd.read_csv(args.seasonStatsPath))
 	statsDf = removeRepeatedPlayersInYear(statsDf)
 	statsDf = removeStarChar(statsDf)
 	statsDf = addLabelToStats(mvpDf, statsDf)
-	statsDf = statsDf.dropna()
+	statsDf = resolveNans(statsDf)
+	statsDf = mapPositions(statsDf)
 	statsDf.ID = range(statsDf.shape[0])
-	statsDf.to_csv(args.outputPath, index=False)
+	statsDf.to_pickle(outputDf)
+	statsDf.to_csv(outputCsv, index=False)
 	return mvpDf, statsDf
 
 if __name__ == "__main__":
