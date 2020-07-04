@@ -1,6 +1,6 @@
 import pandas as pd
 
-player_data = pd.read_csv(r'data/player_data.csv')
+player_data = pd.read_csv(r'data/withoutnan.csv')
 
 def get_player_data(player, year):
     all_data = player_data.loc[(player_data["Player"] == player) & (player_data["Year"] == year)]
@@ -12,8 +12,7 @@ def get_mvps():
     return player_data.loc[player_data["MVP"] == 1]
 
 def main():
-    x = player_data[player_data.Player.notna()]
-    x.to_csv(r'data/new_data.csv')
+    print(get_mvps())
 
 if __name__ == "__main__":
     main()

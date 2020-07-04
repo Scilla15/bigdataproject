@@ -49,14 +49,15 @@ def addLabelToStats(mvpDf, statsDf):
 
 
 def main(args):
-    mvpDf = removeRowsWithoutPlayers(pd.read_csv(args.mvpDataPath))
-    statsDf = removeRowsWithoutPlayers(pd.read_csv(args.seasonStatsPath))
-    statsDf = removeRepeatedPlayersInYear(statsDf)
-    statsDf = removeStarChar(statsDf)
-    statsDf = addLabelToStats(mvpDf, statsDf)
-    statsDf.ID = range(statsDf.shape[0])
-    statsDf.to_csv(args.outputPath, index=False)
-    return mvpDf, statsDf
+	mvpDf = removeRowsWithoutPlayers(pd.read_csv(args.mvpDataPath))
+	statsDf = removeRowsWithoutPlayers(pd.read_csv(args.seasonStatsPath))
+	statsDf = removeRepeatedPlayersInYear(statsDf)
+	statsDf = removeStarChar(statsDf)
+	statsDf = addLabelToStats(mvpDf, statsDf)
+	statsDf = statsDf.dropna()
+	statsDf.ID = range(statsDf.shape[0])
+	statsDf.to_csv(args.outputPath, index=False)
+	return mvpDf, statsDf
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(add_help=True)
