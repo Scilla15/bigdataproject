@@ -10,6 +10,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split, cross_validate
 from sklearn import datasets
 from sklearn import svm
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import confusion_matrix
 
 # def get_player_data(player, year):
 #     all_data = player_data.loc[(player_data["Player"] == player) & (player_data["Year"] == year)]
@@ -32,17 +34,20 @@ def extractTestAndTrainData(X, y):
 	return X_train, X_test, y_train, y_test	
 
 def main(args):
-	scoring = ['precision_macro', 'recall_macro']
+	# scoring = ['precision_macro', 'recall_macro']
 	playerDataDf = pd.read_csv(args.dataPath)
 	X, y = getFeatureAndLabelMatrix(playerDataDf)
 	# return X, y
 	clf = svm.SVC(kernel='linear', C=1, random_state=0)
-	scores = cross_validate(clf, X, y, scoring=scoring)
-	return scores
+	# scores = cross_validate(clf, X, y)
+	y_pred = cross_val_predict(clf, X, y, cv=10)
+	unique, counts = np.unique(y_pred, return_counts=True)
+	conf_mat = confusion_matrix(y, y_pred)
+	print(dict(zip(unique, counts)))
+	print(conf_mat)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(add_help=True)
 	parser.add_argument('-d', '--dataPath', help='Path to cleaned player data', required=True)
 	args = parser.parse_args()
-	scores = main(args)
-	print(scores)
+	main(args)
