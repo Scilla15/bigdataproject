@@ -12,6 +12,7 @@ from sklearn import datasets
 from sklearn import svm
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import confusion_matrix
+from sklearn.tree import DecisionTreeClassifier
 
 # def get_player_data(player, year):
 #     all_data = player_data.loc[(player_data["Player"] == player) & (player_data["Year"] == year)]
@@ -27,24 +28,62 @@ def getFeatureAndLabelMatrix(playerDataDf):
 	playerData = playerDataDf.loc[:, playerDataDf.columns != 'MVP']
 	mvpLabelsArray = mvpLabels.to_numpy()
 	playerDataArray = playerData.to_numpy()
-	return playerDataArray[:, 7:], mvpLabelsArray
+	return playerDataArray[:, 4:], mvpLabelsArray
 
 def extractTestAndTrainData(X, y):
-	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=0)
+	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 	return X_train, X_test, y_train, y_test	
 
-def main(args):
-	# scoring = ['precision_macro', 'recall_macro']
-	playerDataDf = pd.read_csv(args.dataPath)
-	X, y = getFeatureAndLabelMatrix(playerDataDf)
-	# return X, y
-	clf = svm.SVC(kernel='linear', C=1, random_state=0)
-	# scores = cross_validate(clf, X, y)
-	y_pred = cross_val_predict(clf, X, y, cv=10)
+def runDTree(X, y, depth=None):
+	X_train, X_test, y_train, y_test = extractTestAndTrainData(X,y)
+	clf = DecisionTreeClassifier(random_state=0, max_depth=depth, max_features=None, splitter="best")
+	clf = clf.fit(X_train, y_train)
+	# Get feature importance
+	importances = clf.feature_importances_
+	print(importances)
+	y_pred = clf.predict(X_test)
+	tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+	return tn, fp, fn, tp
+
+def runSVM(X, y, kernel="rbf", C=1.0):
+	X_train, X_test, y_train, y_test = extractTestAndTrainData(X,y)
+	clf = svm.SVC(kernel=kernel, C=C, random_state=0)
+	clf = clf.fit(X_train, y_train)
+	y_pred = clf.predict(X_test)
+	tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+	return tn, fp, fn, tp
+
+def runCV(clf, X, y, k, scoring):
+	# Run total cv
+	y_pred = cross_val_predict(clf, X, y, cv=k)
 	unique, counts = np.unique(y_pred, return_counts=True)
 	conf_mat = confusion_matrix(y, y_pred)
 	print(dict(zip(unique, counts)))
 	print(conf_mat)
+
+	# Run individual cv's
+	scoring = ['precision_macro', 'recall_macro']
+	scores = cross_validate(clf, X, y, cv=k, scoring=scoring)
+	print(scores)
+
+def main(args):
+	# Get the X and y matrices
+	scoring = ['precision_macro', 'recall_macro']
+	playerDataDf = pd.read_csv(args.dataPath)
+	X, y = getFeatureAndLabelMatrix(playerDataDf)
+	print(runDTree(X, y))
+	# for i in range(-2,2):
+	# 	for j in ["rbf", "linear", "sigmoid"]:
+	# 		C = 2.0**i
+	# 		print("C parameter of: " + str(C) + " and kernel of " + j)
+	# 		print(runSVM(X,y,C=C,kernel=j))
+
+	for i in range(-2,2):
+		for j in ["rbf", "linear", "sigmoid"]:
+			C = 2.0**i
+			print("C parameter of: " + str(C) + " and kernel of " + j + " for cross validation")
+			clf = svm.SVC(kernel=j, C=C, random_state=0)
+			print(runCV(clf,X,y,k=5,scoring=scoring))
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(add_help=True)
