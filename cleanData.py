@@ -42,7 +42,7 @@ def addLabelToStats(mvpDf, statsDf):
 	statsDf['MVP'] = 0
 	mvps = mvpDf[mvpDf.MVP == 1]
 	for i, mvp in mvps.iterrows():
-		index = statsDf[(statsDf.Year == mvp.YEAR) & (statsDf.Player == mvp.PLAYER)].index
+		index = statsDf[(statsDf.Year == mvp.YEAR+1) & (statsDf.Player == mvp.PLAYER)].index
 		statsDf.loc[index, 'MVP'] = 1
 		print('Found MVP, Player:', mvp.PLAYER, ', Year:', mvp.YEAR)
 	return statsDf
@@ -72,6 +72,7 @@ def main(args):
 	outputCsv = os.path.join(args.outputPath, 'player_data_cleaned.csv')
 	outputDf = os.path.join(args.outputPath, 'player_data_cleaned.pkl')
 	mvpDf = removeRowsWithoutPlayers(pd.read_csv(args.mvpDataPath))
+	mvpDf = mvpDf[mvpDf.YEAR != 2017]
 	statsDf = removeRowsWithoutPlayers(pd.read_csv(args.seasonStatsPath))
 	statsDf = removeRepeatedPlayersInYear(statsDf)
 	statsDf = removeStarChar(statsDf)
