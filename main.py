@@ -47,7 +47,7 @@ def runDTree(X, y, depth=None):
 
 def runSVM(X, y, kernel="rbf", C=1.0):
 	X_train, X_test, y_train, y_test = extractTestAndTrainData(X,y)
-	clf = svm.SVC(kernel=kernel, C=C, random_state=0)
+	clf = svm.SVC(kernel=kernel, C=C)
 	clf = clf.fit(X_train, y_train)
 	y_pred = clf.predict(X_test)
 	tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
@@ -62,28 +62,25 @@ def runCV(clf, X, y, k, scoring):
 	print(conf_mat)
 
 	# Run individual cv's
-	scoring = ['precision_macro', 'recall_macro']
 	scores = cross_validate(clf, X, y, cv=k, scoring=scoring)
 	print(scores)
 
 def main(args):
 	# Get the X and y matrices
-	scoring = ['precision_macro', 'recall_macro']
+	scoring = ['precision_macro', 'recall_macro', 'f1']
 	playerDataDf = pd.read_csv(args.dataPath)
 	X, y = getFeatureAndLabelMatrix(playerDataDf)
-	print(runDTree(X, y))
+	# print(runDTree(X, y))
 	# for i in range(-2,2):
-	# 	for j in ["rbf", "linear", "sigmoid"]:
-	# 		C = 2.0**i
-	# 		print("C parameter of: " + str(C) + " and kernel of " + j)
-	# 		print(runSVM(X,y,C=C,kernel=j))
+	# 	C = 2.0**i
+	# 	print("C parameter of: " + str(C))
+	# 	print(runSVM(X,y,C=C,kernel="linear"))
 
 	for i in range(-2,2):
-		for j in ["rbf", "linear", "sigmoid"]:
-			C = 2.0**i
-			print("C parameter of: " + str(C) + " and kernel of " + j + " for cross validation")
-			clf = svm.SVC(kernel=j, C=C, random_state=0)
-			print(runCV(clf,X,y,k=5,scoring=scoring))
+		C = 2.0**i
+		print("C parameter of: " + str(C) + " and linear kernel for cross validation")
+		clf = svm.SVC(kernel="linear", C=C, random_state=0)
+		runCV(clf,X,y,k=5,scoring=scoring)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(add_help=True)
