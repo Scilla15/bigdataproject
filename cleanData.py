@@ -78,16 +78,27 @@ def binData(statsDf, nbins=5):
         binDf[column] = series.apply(getMid)
     return binDf
 
+def addAllStarLabels(statsDf):
+	statsDf['AS'] = 0
+	allStarDf = pd.read_pickle("all_star_appearances.pickle")
+	for player in allStarDf:
+		for year in allStarDf[player]:
+			index = statsDf[(statsDf.Year == year) & (statsDf.Player == player)].index
+			statsDf.loc[index, 'AS'] = 1
+			print('Found All-Star, Player:', player, ', Year:', year)
+	return statsDf
+
 def main(args):
-	outputCsv = os.path.join(args.outputPath, 'player_data_cleaned.csv')
+	outputCsv = os.path.join(args.outputPath, 'player_data_cleaned_as.csv')
 	outputCsvBinned = os.path.join(args.outputPath, 'player_data_cleaned_binned.csv')
-	outputDf = os.path.join(args.outputPath, 'player_data_cleaned.pkl')
+	outputDf = os.path.join(args.outputPath, 'player_data_cleaned_as.pkl')
 	mvpDf = removeRowsWithoutPlayers(pd.read_csv(args.mvpDataPath))
 	mvpDf = mvpDf[mvpDf.YEAR != 2017]
 	statsDf = removeRowsWithoutPlayers(pd.read_csv(args.seasonStatsPath))
 	statsDf = removeRepeatedPlayersInYear(statsDf)
 	statsDf = removeStarChar(statsDf)
 	statsDf = addLabelToStats(mvpDf, statsDf)
+	statsDf = addAllStarLabels(statsDf)
 	statsDf = resolveNans(statsDf)
 	statsDf = mapPositions(statsDf)
 	statsDf.ID = range(statsDf.shape[0])
@@ -103,4 +114,4 @@ if __name__ == "__main__":
 	parser.add_argument('-s', '--seasonStatsPath', help='Path to season stats for players', required=True)
 	parser.add_argument('-o', '--outputPath', help='Output directory for cleaned data to go into',required=True)
 	args = parser.parse_args()
-	mvpDf, statsDf = main(args)
+	main(args)
