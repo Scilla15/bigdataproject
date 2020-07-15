@@ -6,6 +6,7 @@ import glob
 import argparse
 import os
 import csv
+import copy
 
 def removeRowsWithoutPlayers(df):
 	# if mvp dataset
@@ -68,8 +69,18 @@ def mapPositions(statsDf):
 	statsDf = statsDf.replace({'Pos': posMapping})
 	return statsDf
 
+def binData(statsDf, nbins=5):
+    #This returns a new data frame with binned data to run random foresets and decision trees
+    binDf = copy.deepcopy(statsDf)
+    getMid = lambda interval : interval.mid
+    for column in binDf.drop(['ID', 'Year', 'Player', 'Pos', 'Tm', 'MVP'], axis=1, errors='ignore'):
+        series = pd.cut(binDf[column], nbins)
+        binDf[column] = series.apply(getMid)
+    return binDf
+
 def main(args):
 	outputCsv = os.path.join(args.outputPath, 'player_data_cleaned.csv')
+	outputCsvBinned = os.path.join(args.outputPath, 'player_data_cleaned_binned.csv')
 	outputDf = os.path.join(args.outputPath, 'player_data_cleaned.pkl')
 	mvpDf = removeRowsWithoutPlayers(pd.read_csv(args.mvpDataPath))
 	mvpDf = mvpDf[mvpDf.YEAR != 2017]
@@ -82,6 +93,8 @@ def main(args):
 	statsDf.ID = range(statsDf.shape[0])
 	statsDf.to_pickle(outputDf)
 	statsDf.to_csv(outputCsv, index=False)
+	binnedDf = binData(statsDf)
+	binnedDf.to_csv(outputCsvBinned, index=False)
 	return mvpDf, statsDf
 
 if __name__ == "__main__":
