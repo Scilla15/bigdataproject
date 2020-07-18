@@ -8,16 +8,22 @@ import matplotlib.pyplot as plt
 
 nbins = 50
 
-allStats = pd.read_pickle('./Data/player_data_cleaned.pkl')
+allStats = pd.read_csv('./Data/cluster_data.csv')
 
-mvpStats = allStats[allStats.MVP == 1]
-regStats = allStats[allStats.MVP == 0]
+# mvpStats = allStats[allStats.MVP == 1]
+# regStats = allStats[allStats.MVP == 0]
+
+cluster0 = allStats[allStats.Cluster == 0]
+cluster12 = allStats[allStats.Cluster == 12]
+clusterRest = allStats[(allStats.Cluster != 0) & (allStats.Cluster != 12)]
 
 def plotHistogram(feature, title, nbins, logscale=True):
-	regData = regStats[feature].to_numpy()
-	mvpData = mvpStats[feature].to_numpy()
-	plt.hist(regData, bins=nbins, log=logscale)
-	plt.hist(mvpData, bins=nbins, log=logscale, label='MVP')
+	c0 = cluster0[feature].to_numpy()
+	c12 = cluster12[feature].to_numpy()
+	rest = clusterRest[feature].to_numpy()
+	plt.hist(rest, bins=nbins, log=logscale, label="rest")
+	plt.hist(c12, bins=nbins, log=logscale, label='c12')
+	plt.hist(c0, bins=nbins, log=logscale, label='c0')
 	plt.legend()
 	if logscale:
 		title = title + ' (Log Scale)'
@@ -36,3 +42,6 @@ def plotScatter(feature1, feature2, title):
 	plt.ylabel(feature2)
 	plt.title(title)
 	plt.show()
+
+for (columnName, columnData) in allStats.iteritems():
+	plotHistogram(columnName, columnName, nbins)
